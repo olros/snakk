@@ -14,6 +14,8 @@ const configuration = {
 
 export const openUserMedia = async (localVideo, remoteVideo, context) => {
   const stream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
+  // Get user screen
+  // const stream = await navigator.mediaDevices.getDisplayMedia();
   localVideo.current.srcObject = stream;
   context.localStream.set(stream);
   let newMediaStream = new MediaStream();
@@ -24,15 +26,11 @@ export const openUserMedia = async (localVideo, remoteVideo, context) => {
 };
 
 export const createRoom = async (context) => {
-  // document.querySelector('#createBtn').disabled = true;
-  // document.querySelector('#joinBtn').disabled = true;
   const db = firebase.firestore();
   const roomRef = await db.collection('rooms').doc();
   
   console.log('Create PeerConnection with configuration: ', configuration);
   let peerConnection = new RTCPeerConnection(configuration);
-  
-  registerPeerConnectionListeners();
 
   context.localStream.get.getTracks().forEach(track => {
     peerConnection.addTrack(track, context.localStream.get);
@@ -65,7 +63,6 @@ export const createRoom = async (context) => {
   await roomRef.set(roomWithOffer);
   context.roomId.set(roomRef.id);
   console.log(`New room created with SDP offer. Room ID: ${roomRef.id}`);
-  // document.querySelector('#currentRoom').innerText = `Current room is ${roomRef.id} - You are the caller!`;
   // Code for creating a room above
 
   peerConnection.addEventListener('track', event => {
@@ -126,7 +123,6 @@ export const joinRoomById = async (roomId, context) => {
     console.log('Create PeerConnection with configuration: ', configuration);
     let newPeerConnection = new RTCPeerConnection(configuration);
     
-    registerPeerConnectionListeners();
     context.localStream.get.getTracks().forEach(track => {
       newPeerConnection.addTrack(track, context.localStream.get);
     });
@@ -185,12 +181,6 @@ export const joinRoomById = async (roomId, context) => {
 };
 
 export const hangUp = async (localVideo, context) => {
-  // console.log(localVideo.srcObject);
-  // const tracks = localVideo.srcObject.getTracks();
-  // tracks.forEach(track => {
-    // track.stop();
-  // });
-
   if (localVideo.srcObject) {
     localVideo.srcObject.getTracks().forEach(track => track.stop());
   }
@@ -201,15 +191,7 @@ export const hangUp = async (localVideo, context) => {
   if (context.peerConnection.get) {
     context.peerConnection.get.close();
   }
-
-  // document.querySelector('#localVideo').srcObject = null;
-  // document.querySelector('#remoteVideo').srcObject = null;
-  // document.querySelector('#cameraBtn').disabled = false;
-  // document.querySelector('#joinBtn').disabled = true;
-  // document.querySelector('#createBtn').disabled = true;
-  // document.querySelector('#hangupBtn').disabled = true;
-  // document.querySelector('#currentRoom').innerText = '';
-
+  
   // Delete room on hangup
   if (context.roomId.get) {
     const db = firebase.firestore();
@@ -226,24 +208,4 @@ export const hangUp = async (localVideo, context) => {
   }
 
   document.location.reload(true);
-};
-
-export const registerPeerConnectionListeners = (context) => {
-  // context.peerConnection.get.addEventListener('icegatheringstatechange', () => {
-  //   console.log(
-  //       `ICE gathering state changed: ${context.peerConnection.get.iceGatheringState}`);
-  // });
-
-  // context.peerConnection.get.addEventListener('connectionstatechange', () => {
-  //   console.log(`Connection state change: ${context.peerConnection.get.connectionState}`);
-  // });
-
-  // context.peerConnection.get.addEventListener('signalingstatechange', () => {
-  //   console.log(`Signaling state change: ${context.peerConnection.get.signalingState}`);
-  // });
-
-  // context.peerConnection.get.addEventListener('iceconnectionstatechange ', () => {
-  //   console.log(
-  //       `ICE connection state change: ${context.peerConnection.get.iceConnectionState}`);
-  // });
 };

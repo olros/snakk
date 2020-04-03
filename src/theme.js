@@ -6,14 +6,11 @@ export default createMuiTheme({
     },
     palette: {
       primary: {
-        // main: '#1D448C',
-        main: '#ffb200', // Easter
-        // dark: '#183770',
-        dark: '#e09d00', // Easter
-        contrastText: '#ffffff',
+        main: '#cfded5',
+        contrastText: '#454a47',
       },
       secondary: {
-        main: '#748674', // '#00897B',
+        main: '#545b57',
         contrastText: '#ffffff',
       },
       error: {
