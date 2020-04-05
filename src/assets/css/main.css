@@ -1,28 +1,23 @@
+@import url('https://fonts.googleapis.com/css?family=Krub:500,600');
+
 * {
     padding: 0;
-    --background: #464d49;
+    font-family: 'Krub', sans-serif;
+    --primary-background: #464d49;
+    --secondary-background: #545b57;
     --text-color: #ffffff;
     --primary-button: #cfded5;
     --primary-button-text: #454a47;
-    --secondary-button: #545b57;
+    --secondary-button: #C9B1C0;
+    box-sizing: border-box;
 }
 body {
     margin: 0;
-    font-family: 'Roboto', sans-serif;
-    background: var(--background);
+    font-family: 'Krub', sans-serif;
+    background: var(--primary-background);
     color: var(--text-color);
 }
 
-div#videos {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-}
-
-div#videos > video {
-    background: black;
-    width: 640px;
-    height: 100%;
-    display: block;
-    margin: 1em;
+a {
+    text-decoration: none;
 }

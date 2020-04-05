@@ -1,34 +1,27 @@
-import React, {useState, useEffect, useRef, useContext} from 'react';
-import WebRTCContext from '../components/WebRTC/context';
-// import FirebaseContext from '../components/Firebase/context';
-import '../assets/css/main.css';
+import React, {useRef, useContext} from 'react';
+import Store from '../store';
+import {openUserMedia, createRoom, joinRoomById, hangUp} from '../api/FirebaseService';
 
-import {withStyles} from '@material-ui/core/styles';
+// Material UI Components
+import {makeStyles} from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
+
+// Icons
 import PermCameraMic from '@material-ui/icons/PermCameraMic';
 import Group from '@material-ui/icons/Group';
 import GroupAdd from '@material-ui/icons/GroupAdd';
 import Close from '@material-ui/icons/Close';
-import {openUserMedia, createRoom, joinRoomById, hangUp} from '../api/FirebaseService';
 
-const styles = {
-  root: {
-      minHeight: '100vh',
-  },
-};
+const useStyles = makeStyles({
+  
+});
 
-function HomePage(props) {
-  const {classes} = props;
-
-  const webRTCContext = useContext(WebRTCContext);
-  // const firebaseContext = useContext(FirebaseContext);
+function HomePage() {
+  const classes = useStyles();
+  const store = useContext(Store);
 
   const localVideo = useRef(null);
   const remoteVideo = useRef(null);
-
-  const getCamera = async () => {
-    openUserMedia(localVideo, remoteVideo, webRTCContext);
-  }
 
   return (
     <div className="App">
@@ -38,7 +31,7 @@ function HomePage(props) {
           color="secondary"
           className={classes.button}
           startIcon={<PermCameraMic />}
-          onClick={() => openUserMedia(localVideo, remoteVideo, webRTCContext)}
+          onClick={() => openUserMedia(localVideo, remoteVideo, store)}
         >
           Åpne kamera
         </Button>
@@ -47,7 +40,7 @@ function HomePage(props) {
           color="secondary"
           className={classes.button}
           startIcon={<GroupAdd />}
-          onClick={() => createRoom(webRTCContext)}
+          onClick={() => createRoom(store)}
         >
           Lag nytt rom
         </Button>
@@ -56,7 +49,7 @@ function HomePage(props) {
           color="secondary"
           className={classes.button}
           startIcon={<Group />}
-          onClick={() => joinRoomById("lVqCHi4WMufJcLceHNHt", webRTCContext)}
+          onClick={() => joinRoomById("lVqCHi4WMufJcLceHNHt", store)}
         >
           Bli med i rom
         </Button>
@@ -65,13 +58,13 @@ function HomePage(props) {
           color="secondary"
           className={classes.button}
           startIcon={<Close />}
-          onClick={() => hangUp(localVideo, webRTCContext)}
+          onClick={() => hangUp(localVideo, store)}
         >
           Legg på
         </Button>
       </div>
       <div>
-        <span>{webRTCContext.roomId.get}</span>
+        <span>{store.roomId.get}</span>
       </div>
       <div id="videos">
         <video ref={localVideo} muted autoPlay playsInline></video>
@@ -81,4 +74,4 @@ function HomePage(props) {
   );
 }
 
-export default withStyles(styles)(HomePage);
+export default HomePage;

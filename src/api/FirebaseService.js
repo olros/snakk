@@ -1,4 +1,5 @@
-import firebase from "../components/Firebase/firebase";
+import firebase from "../firebase";
+import URLS from '../URLS';
 
 const configuration = {
   iceServers: [
@@ -12,28 +13,30 @@ const configuration = {
   iceCandidatePoolSize: 10,
 };
 
-export const openUserMedia = async (localVideo, remoteVideo, context) => {
+export const openUserMedia = async (localVideo, store) => {
   const stream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
   // Get user screen
   // const stream = await navigator.mediaDevices.getDisplayMedia();
+  console.log(localVideo.current.srcObject);
   localVideo.current.srcObject = stream;
-  context.localStream.set(stream);
+  console.log(localVideo.current.srcObject);
+  store.localStream.set(stream);
   let newMediaStream = new MediaStream();
-  context.remoteStream.set(newMediaStream);
-  remoteVideo.current.srcObject = newMediaStream;
+  store.remoteStream.set(newMediaStream);
+  // remoteVideo.current.srcObject = newMediaStream;
 
   console.log('Stream:', stream);
 };
 
-export const createRoom = async (context) => {
+export const createRoom = async (store) => {
   const db = firebase.firestore();
   const roomRef = await db.collection('rooms').doc();
   
   console.log('Create PeerConnection with configuration: ', configuration);
   let peerConnection = new RTCPeerConnection(configuration);
 
-  context.localStream.get.getTracks().forEach(track => {
-    peerConnection.addTrack(track, context.localStream.get);
+  store.localStream.get.getTracks().forEach(track => {
+    peerConnection.addTrack(track, store.localStream.get);
   });
 
   // Code for collecting ICE candidates below
@@ -54,14 +57,16 @@ export const createRoom = async (context) => {
   await peerConnection.setLocalDescription(offer);
   console.log('Created offer:', offer);
 
+  const name = store.name.get || "-";
   const roomWithOffer = {
     'offer': {
       type: offer.type,
       sdp: offer.sdp,
+      name: name,
     },
   };
   await roomRef.set(roomWithOffer);
-  context.roomId.set(roomRef.id);
+  store.roomId.set(roomRef.id);
   console.log(`New room created with SDP offer. Room ID: ${roomRef.id}`);
   // Code for creating a room above
 
@@ -69,7 +74,7 @@ export const createRoom = async (context) => {
     console.log('Got remote track:', event.streams[0]);
     event.streams[0].getTracks().forEach(track => {
       console.log('Add a track to the remoteStream:', track);
-      context.remoteStream.get.addTrack(track);
+      store.remoteStream.get.addTrack(track);
     });
   });
 
@@ -96,24 +101,19 @@ export const createRoom = async (context) => {
   });
   // Listen for remote ICE candidates above
 
-  context.peerConnection.set(peerConnection);
+  store.peerConnection.set(peerConnection);
+
+  return roomRef.id;
 };
 
-export const joinRoom = (context) => {
-  // document.querySelector('#createBtn').disabled = true;
-  // document.querySelector('#joinBtn').disabled = true;
+export const roomExists = async (roomId) => {
+  const db = firebase.firestore();
+  const roomRef = db.collection('rooms').doc(`${roomId}`);
+  const roomSnapshot = await roomRef.get();
+  return roomSnapshot.exists;
+}
 
-  // document.querySelector('#confirmJoinBtn').addEventListener('click', async () => {
-  //       context.roomId.set(document.querySelector('#room-id').value);
-  //       console.log('Join room: ', context.roomId.get);
-  //       document.querySelector(
-  //           '#currentRoom').innerText = `Current room is ${context.roomId.get} - You are the callee!`;
-  //       await this.joinRoomById(context.roomId.get);
-  //     }, {once: true});
-  // context.roomDialog.get.open();
-};
-
-export const joinRoomById = async (roomId, context) => {
+export const joinRoomById = async (roomId, store) => {
   const db = firebase.firestore();
   const roomRef = db.collection('rooms').doc(`${roomId}`);
   const roomSnapshot = await roomRef.get();
@@ -123,8 +123,8 @@ export const joinRoomById = async (roomId, context) => {
     console.log('Create PeerConnection with configuration: ', configuration);
     let newPeerConnection = new RTCPeerConnection(configuration);
     
-    context.localStream.get.getTracks().forEach(track => {
-      newPeerConnection.addTrack(track, context.localStream.get);
+    store.localStream.get.getTracks().forEach(track => {
+      newPeerConnection.addTrack(track, store.localStream.get);
     });
 
     // Code for collecting ICE candidates below
@@ -143,7 +143,7 @@ export const joinRoomById = async (roomId, context) => {
       console.log('Got remote track:', event.streams[0]);
       event.streams[0].getTracks().forEach(track => {
         console.log('Add a track to the remoteStream:', track);
-        context.remoteStream.get.addTrack(track);
+        store.remoteStream.get.addTrack(track);
       });
     });
 
@@ -155,10 +155,12 @@ export const joinRoomById = async (roomId, context) => {
     console.log('Created answer:', answer);
     await newPeerConnection.setLocalDescription(answer);
 
+    const name = store.name.get || "-";
     const roomWithAnswer = {
       answer: {
         type: answer.type,
         sdp: answer.sdp,
+        name: name,
       },
     };
     await roomRef.update(roomWithAnswer);
@@ -176,26 +178,22 @@ export const joinRoomById = async (roomId, context) => {
     });
     // Listening for remote ICE candidates above
 
-    context.peerConnection.set(newPeerConnection);
+    store.peerConnection.set(newPeerConnection);
   }
 };
 
-export const hangUp = async (localVideo, context) => {
-  if (localVideo.srcObject) {
-    localVideo.srcObject.getTracks().forEach(track => track.stop());
+export const hangUp = async (localVideo, store, history) => {
+  if (store.remoteStream.get) {
+    store.remoteStream.get.getTracks().forEach(track => track.stop());
   }
-  if (context.remoteStream.get) {
-    context.remoteStream.get.getTracks().forEach(track => track.stop());
-  }
-
-  if (context.peerConnection.get) {
-    context.peerConnection.get.close();
+  if (store.peerConnection.get) {
+    store.peerConnection.get.close();
   }
   
   // Delete room on hangup
-  if (context.roomId.get) {
+  if (store.roomId.get) {
     const db = firebase.firestore();
-    const roomRef = db.collection('rooms').doc(context.roomId.get);
+    const roomRef = db.collection('rooms').doc(store.roomId.get);
     const calleeCandidates = await roomRef.collection('calleeCandidates').get();
     calleeCandidates.forEach(async candidate => {
       await candidate.ref.delete();
@@ -207,5 +205,5 @@ export const hangUp = async (localVideo, context) => {
     await roomRef.delete();
   }
 
-  document.location.reload(true);
+  history.push(URLS.landing);
 };
