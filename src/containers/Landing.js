@@ -49,10 +49,11 @@ const useStyles = makeStyles({
     subtitle: {
         color: 'var(--text-color)',
         textAlign: 'center',
+        marginBottom: 10,
     },
     options: {
         display: 'flex',
-        marginTop: 30,
+        marginTop: 20,
         '@media only screen and (max-width: 600px)': {
             flexDirection: 'column',
         },
@@ -100,111 +101,112 @@ const useStyles = makeStyles({
 });
 
 function Landing(props) {
-  const classes = useStyles();
-  const store = useContext(Store);
+    const classes = useStyles();
+    const store = useContext(Store);
     let history = useHistory();
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
-  const localVideo = useRef(null);
+    const localVideo = useRef(null);
 
-  const [join, setJoin] = useState(false);
+    const [join, setJoin] = useState(false);
 
-  useEffect(() => {
-    localVideo.current.srcObject = store.localStream.get;
-  }, [store.localStream.get]);
+    useEffect(() => {
+        localVideo.current.srcObject = store.localStream.get;
+    }, [store.localStream.get]);
 
-  const joinRoom = async (e) => {
-    e.preventDefault();
-    if (join) {
-        if (await roomExists(store.roomId.get)) {
-            history.push(URLS.room.concat(store.roomId.get).concat('/'));
+    const joinRoom = async (e) => {
+        e.preventDefault();
+        if (join) {
+            if (await roomExists(store.roomId.get)) {
+                history.push(URLS.room.concat(store.roomId.get).concat('/'));
+            } else {
+                showSnackbar("Dette rommet eksisterer ikke");
+            }
         } else {
-            showSnackbar("This room does not exist");
+            if (store.localStream.get !== null) {
+                const roomId = await createRoom(store);
+                history.push(URLS.room.concat(roomId).concat('/'));
+            } else {
+                showSnackbar("Du må gi tilgang til kamera og mikrofon");
+            }
         }
-    } else {
-        if (store.localStream.get !== null) {
-            const roomId = await createRoom(store);
-            history.push(URLS.room.concat(roomId).concat('/'));
-        } else {
-            showSnackbar("Camera access not given");
-        }
+    };
+
+    const showSnackbar = (message) => {
+        setSnackbarMessage(message);
+        setSnackbarOpen(true);
     }
-  };
 
-  const showSnackbar = (message) => {
-    setSnackbarMessage(message);
-    setSnackbarOpen(true);
-  }
-
-  return (
-    <div className={classes.root}>
-        <Paper elevation={3} className={classes.paper} >
-            <Link to={URLS.landing}><Typography variant="h1" className={classes.header}>Snakk</Typography></Link>
-            <Typography variant="subtitle1" className={classes.subtitle}>Velkommen til Snakk!<br/>Her kan du enkelt lage en videosamtale med andre.<br/>Bare start samtalen og del linken din.</Typography>
-            <div className={classes.options}>
-                <Button
-                    variant={!join ? 'contained' : 'outlined'}
-                    color={!join ? 'primary' : 'secondary'}
-                    className={classes.option}
-                    startIcon={<Add />}
-                    onClick={() => setJoin(false)}
-                    >
-                    Lag nytt rom
-                </Button>
-                <Button
-                    variant={join ? 'contained' : 'outlined'}
-                    color={join ? 'primary' : 'secondary'}
-                    className={classes.option}
-                    startIcon={<Group />}
-                    onClick={() => setJoin(true)}
-                    >
-                    Bli med i rom
-                </Button>
-            </div>
-        </Paper>
-        <Paper elevation={3} className={classes.paper}>
-            <form className={classes.flex} autoComplete="off" onSubmit={joinRoom}>
-                {join ?
-                    <TextField onChange={(event) => store.roomId.set(event.target.value)} value={store.roomId.get || ""} className={classes.input} label="Skriv inn rom-ID" variant="filled" required />
-                :
-                    <React.Fragment>
-                        <TextField onChange={(event) => store.name.set(event.target.value)} value={store.name.get || ""} className={classes.input} label="Skriv inn ditt navn" variant="filled" required />
-                        <Button
-                            variant="outlined"
-                            color="secondary"
-                            className={store.localStream.get !== null ? classes.hide : classes.videoButton}
-                            startIcon={<PermCameraMic />}
-                            onClick={() => openUserMedia(localVideo, store)}
-                            >
-                            Åpne kamera og mikrofon
-                        </Button>
-                        <video ref={localVideo} muted autoPlay playsInline className={store.localStream.get === null ? classes.hide : classes.video}></video>
-                    </React.Fragment>
-                }
-                <Button
-                    variant="contained"
-                    color="primary"
-                    className={classes.button}
-                    startIcon={join ? <Group /> : <Add />}
-                    type='submit'
-                    >
-                    {join ? "Bli med" : "Lag nytt rom"}
-                </Button>
-            </form>
-        </Paper>
-        <Snackbar
-            anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'center',
-            }}
-            open={snackbarOpen}
-            autoHideDuration={6000}
-            onClose={() => setSnackbarOpen(false)}
-            message={snackbarMessage}
-            action={<IconButton size="small" aria-label="close" color="inherit" onClick={() => setSnackbarOpen(false)}><CloseIcon fontSize="small" /></IconButton>}
-        />
-    </div>
-  );
+    return (
+        <div className={classes.root}>
+            <Paper elevation={3} className={classes.paper} >
+                <Link to={URLS.landing}><Typography variant="h1" className={classes.header}>Snakk</Typography></Link>
+                <Typography variant="subtitle1" className={classes.subtitle}>Velkommen til Snakk!<br/>Her kan du enkelt lage en videosamtale med andre.<br/>Bare lag et rom og del linken din.</Typography>
+                <div className={classes.options}>
+                    <Button
+                        variant={join ? 'contained' : 'text'}
+                        color={join ? 'primary' : 'secondary'}
+                        className={classes.option}
+                        startIcon={<Add />}
+                        onClick={() => setJoin(false)}
+                        >
+                        Lag nytt rom
+                    </Button>
+                    <Button
+                        variant={!join ? 'contained' : 'text'}
+                        color={!join ? 'primary' : 'secondary'}
+                        className={classes.option}
+                        startIcon={<Group />}
+                        onClick={() => setJoin(true)}
+                        >
+                        Bli med i rom
+                    </Button>
+                </div>
+            </Paper>
+            <Paper elevation={3} className={classes.paper}>
+                <Typography variant="h5" className={classes.subtitle}>{join ? 'Bli med i rom' : 'Lag nytt rom'}</Typography>
+                <form className={classes.flex} autoComplete="off" onSubmit={joinRoom}>
+                    {join ?
+                        <TextField onChange={(event) => store.roomId.set(event.target.value)} value={store.roomId.get || ""} className={classes.input} label="Skriv inn rom-ID" variant="filled" required />
+                    :
+                        <React.Fragment>
+                            <TextField onChange={(event) => store.name.set(event.target.value)} value={store.name.get || ""} className={classes.input} label="Skriv inn ditt navn" variant="filled" required />
+                            <Button
+                                variant="outlined"
+                                color="secondary"
+                                className={store.localStream.get !== null ? classes.hide : classes.videoButton}
+                                startIcon={<PermCameraMic />}
+                                onClick={() => openUserMedia(localVideo, store)}
+                                >
+                                Åpne kamera og mikrofon
+                            </Button>
+                            <video ref={localVideo} muted autoPlay playsInline className={store.localStream.get === null ? classes.hide : classes.video}></video>
+                        </React.Fragment>
+                    }
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        className={classes.button}
+                        startIcon={join ? <Group /> : <Add />}
+                        type='submit'
+                        >
+                        {join ? "Bli med" : "Lag nytt rom"}
+                    </Button>
+                </form>
+            </Paper>
+            <Snackbar
+                anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'center',
+                }}
+                open={snackbarOpen}
+                autoHideDuration={6000}
+                onClose={() => setSnackbarOpen(false)}
+                message={snackbarMessage}
+                action={<IconButton size="small" aria-label="close" color="inherit" onClick={() => setSnackbarOpen(false)}><CloseIcon fontSize="small" /></IconButton>}
+            />
+        </div>
+    );
 }
 
 export default Landing;

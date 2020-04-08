@@ -12,7 +12,6 @@ import './assets/css/main.css';
 import Store from './store';
 
 // Project containers
-import HomePage from './containers/HomePage';
 import Landing from './containers/Landing';
 import Room from './containers/Room';
 
@@ -20,16 +19,24 @@ function App() {
     const [peerConnection, setPeerConnection] = useState(null);
     const [localStream, setLocalStream] = useState(null);
     const [remoteStream, setRemoteStream] = useState(null);
-    const [roomDialog, setRoomDialog] = useState(null);
     const [roomId, setRoomId] = useState(null);
     const [name, setName] = useState(null);
+    const [remoteName, setRemoteName] = useState(null);
+    const [shareVideo, setShareVideo] = useState(true);
+    const [shareAudio, setShareAudio] = useState(true);
+    const [sharingDisplay, setSharingDisplay] = useState(false);
+    const [callStart, setCallStart] = useState(null);
     const store = {
         peerConnection: {get: peerConnection, set: setPeerConnection},
         localStream: {get: localStream, set: setLocalStream},
         remoteStream: {get: remoteStream, set: setRemoteStream},
-        roomDialog: {get: roomDialog, set: setRoomDialog},
         roomId: {get: roomId, set: setRoomId},
-        name: {get: name, set: setName}
+        name: {get: name, set: setName},
+        remoteName: {get: remoteName, set: setRemoteName},
+        shareVideo: {get: shareVideo, set: setShareVideo},
+        shareAudio: {get: shareAudio, set: setShareAudio},
+        sharingDisplay: {get: sharingDisplay, set: setSharingDisplay},
+        callStart: {get: callStart, set: setCallStart}
     };
     
     return (
@@ -39,7 +46,6 @@ function App() {
                     <Switch>
                         <Route exact path={URLS.landing} component={Landing} />
                         <Route path={URLS.room.concat(':id/')} component={Room} />
-                        <Route path="/old/" component={HomePage} />
                     </Switch>
                 </MuiThemeProvider>
             </BrowserRouter>

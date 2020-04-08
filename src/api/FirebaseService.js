@@ -14,18 +14,48 @@ const configuration = {
 };
 
 export const openUserMedia = async (localVideo, store) => {
-  const stream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
-  // Get user screen
-  // const stream = await navigator.mediaDevices.getDisplayMedia();
-  console.log(localVideo.current.srcObject);
+  const stream = await navigator.mediaDevices.getUserMedia({video: store.shareVideo.get, audio: store.shareAudio.get});
   localVideo.current.srcObject = stream;
-  console.log(localVideo.current.srcObject);
   store.localStream.set(stream);
+
   let newMediaStream = new MediaStream();
   store.remoteStream.set(newMediaStream);
   // remoteVideo.current.srcObject = newMediaStream;
+};
 
-  console.log('Stream:', stream);
+export const setScreenUserMedia = async (localVideo, store, showSnackbar) => {
+  try {
+    const stream = await navigator.mediaDevices.getDisplayMedia();
+    store.localStream.get.getTracks().forEach(function(track) {
+      track.stop();
+    });
+    localVideo.current.srcObject = stream;
+    store.localStream.set(stream);
+
+    let newPeerConnection = store.peerConnection.get;
+    newPeerConnection.getSenders().map(sender => sender.replaceTrack(stream.getTracks().find(t => t.kind === sender.track?.kind), stream));
+    store.peerConnection.set(newPeerConnection);
+    store.sharingDisplay.set(true);
+  } catch (e) {
+    showSnackbar("Denne enheten støtter ikke skjermdeling");
+  }
+};
+
+// TODO: Image freezes on remote when turning off audio or video
+export const setCameraUserMedia = async (localVideo, store, video = store.shareVideo.get, audio = store.shareAudio.get) => {
+  store.localStream.get.getTracks().forEach(function(track) {
+    track.stop();
+  });
+  const stream = await navigator.mediaDevices.getUserMedia({video: video, audio: audio});
+  store.shareVideo.set(video);
+  store.shareAudio.set(audio);
+  localVideo.current.srcObject = stream;
+  store.localStream.set(stream);
+
+  let newPeerConnection = store.peerConnection.get;
+  newPeerConnection.getSenders().map(sender => sender.replaceTrack(stream.getTracks().find(t => t.kind === sender.track?.kind), stream));
+  store.peerConnection.set(newPeerConnection);
+  store.sharingDisplay.set(false);
 };
 
 export const createRoom = async (store) => {
@@ -83,6 +113,8 @@ export const createRoom = async (store) => {
     const data = snapshot.data();
     if (!peerConnection.currentRemoteDescription && data && data.answer) {
       console.log('Got remote description: ', data.answer);
+      store.remoteName.set(data.answer.name);
+      store.callStart.set(new Date());
       const rtcSessionDescription = new RTCSessionDescription(data.answer);
       await peerConnection.setRemoteDescription(rtcSessionDescription);
     }
@@ -150,6 +182,8 @@ export const joinRoomById = async (roomId, store) => {
     // Code for creating SDP answer below
     const offer = roomSnapshot.data().offer;
     console.log('Got offer:', offer);
+    store.remoteName.set(offer.name);
+    store.callStart.set(new Date());
     await newPeerConnection.setRemoteDescription(new RTCSessionDescription(offer));
     const answer = await newPeerConnection.createAnswer();
     console.log('Created answer:', answer);
@@ -182,7 +216,7 @@ export const joinRoomById = async (roomId, store) => {
   }
 };
 
-export const hangUp = async (localVideo, store, history) => {
+export const hangUp = async (store) => {
   if (store.remoteStream.get) {
     store.remoteStream.get.getTracks().forEach(track => track.stop());
   }
@@ -205,5 +239,5 @@ export const hangUp = async (localVideo, store, history) => {
     await roomRef.delete();
   }
 
-  history.push(URLS.landing);
+  window.location.href = URLS.landing;
 };
