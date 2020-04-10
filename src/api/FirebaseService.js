@@ -41,7 +41,7 @@ export const setScreenUserMedia = async (localVideo, store, showSnackbar) => {
   }
 };
 
-// TODO: Image freezes on remote when turning off audio or video
+// TODO: Image freezes on remote when turning off audio, video or stop sharing screen
 export const setCameraUserMedia = async (localVideo, store, video = store.shareVideo.get, audio = store.shareAudio.get) => {
   store.localStream.get.getTracks().forEach(function(track) {
     track.stop();

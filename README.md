@@ -6,7 +6,7 @@ This website uses the following technologies
 * Yarn (Package-manager)
 * ReactJs
 * Material-UI (CSS-framework)
-* Firebase Firestone
+* Firebase Firestore
 * WebRTC
 
 ### Getting started
