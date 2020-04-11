@@ -7,6 +7,7 @@ import classnames from 'classnames';
 
 // Components
 import ShareDialog from '../components/ShareDialog';
+import GitHubLink from '../components/GitHubLink';
 
 // Material UI Components
 import {makeStyles} from '@material-ui/core/styles';
@@ -268,32 +269,36 @@ function Room(props) {
                     </div>
                 </React.Fragment>
             :
-                <Paper elevation={3} className={classes.paper}>
-                    <form className={classes.flex} autoComplete="off" onSubmit={joinRoom}>
-                        <Link to={URLS.landing}><Typography variant="h1" className={classes.header}>Snakk</Typography></Link>
-                        <Typography variant="subtitle1" className={classes.subtitle}>Velkommen til Snakk!<br/>Skriv inn ditt navn og del kamera for å bli med.</Typography>
-                        <TextField onChange={(event) => store.name.set(event.target.value)} className={classes.input} label="Skriv inn ditt navn" variant="filled" required />
-                        <Button
-                            variant="outlined"
-                            color="secondary"
-                            className={store.localStream.get !== null ? classes.hide : classes.videoButton}
-                            startIcon={<PermCameraMic />}
-                            onClick={() => openUserMedia(previewVideo, store)}
-                            >
-                            Åpne kamera og mikrofon
-                        </Button>
-                        <video ref={previewVideo} muted autoPlay playsInline className={store.localStream.get === null ? classes.hide : classes.video}></video>
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            className={classes.button}
-                            startIcon={<Group />}
-                            type='submit'
-                            >
-                            Bli med
-                        </Button>
-                    </form>
-                </Paper>
+                <React.Fragment>
+                    <Paper elevation={3} className={classes.paper}>
+                        <form className={classes.flex} autoComplete="off" onSubmit={joinRoom}>
+                            <Link to={URLS.landing}><Typography variant="h1" className={classes.header}>Snakk</Typography></Link>
+                            <Typography variant="subtitle1" className={classes.subtitle}>Velkommen til Snakk!<br/>Skriv inn ditt navn og del kamera for å bli med.</Typography>
+                            <TextField onChange={(event) => store.name.set(event.target.value)} className={classes.input} label="Skriv inn ditt navn" variant="filled" required />
+                            <Button
+                                variant="outlined"
+                                color="secondary"
+                                className={store.localStream.get !== null ? classes.hide : classes.videoButton}
+                                startIcon={<PermCameraMic />}
+                                onClick={() => openUserMedia(previewVideo, store)}
+                                >
+                                Åpne kamera og mikrofon
+                            </Button>
+                            <video ref={previewVideo} muted autoPlay playsInline className={store.localStream.get === null ? classes.hide : classes.video}></video>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                className={classes.button}
+                                startIcon={<Group />}
+                                type='submit'
+                                >
+                                Bli med
+                            </Button>
+                        </form>
+                    </Paper>
+                    <GitHubLink />
+                </React.Fragment>
+                
             }
             <Snackbar
                 anchorOrigin={{

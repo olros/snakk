@@ -4,6 +4,9 @@ import Store from '../store';
 import { Link, useHistory } from 'react-router-dom';
 import { openUserMedia, roomExists, createRoom } from '../api/FirebaseService';
 
+// Components
+import GitHubLink from '../components/GitHubLink';
+
 // Material UI Components
 import {makeStyles} from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
@@ -194,6 +197,7 @@ function Landing(props) {
                     </Button>
                 </form>
             </Paper>
+            <GitHubLink />
             <Snackbar
                 anchorOrigin={{
                     vertical: 'bottom',
